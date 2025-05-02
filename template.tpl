@@ -402,26 +402,17 @@ function mapChildEventName(parentEventName) {
 function addNonPAEcommerceData(eventData, mappedEventData) {
   const event = mappedEventData[0];
   const cartOrTransactionEvent =
-    event.name.indexOf('cart.') !== -1 ||
-    event.name.indexOf('transaction.') !== -1;
+    event.name.indexOf('cart.') !== -1 || event.name.indexOf('transaction.') !== -1;
 
   // self_promotion.* or publisher.* events
-  if (eventData.onsitead_type)
-    event.data.onsitead_type = makeString(eventData.onsitead_type);
-  if (eventData.creative_name)
-    event.data.onsitead_variant = makeString(eventData.creative_name);
-  if (eventData.creative_slot)
-    event.data.onsitead_category = makeString(eventData.creative_slot);
-  if (eventData.promotion_id)
-    event.data.onsitead_campaign = makeString(eventData.promotion_id);
-  if (eventData.promotion_name)
-    event.data.onsitead_creation = makeString(eventData.promotion_name);
+  if (eventData.onsitead_type) event.data.onsitead_type = makeString(eventData.onsitead_type);
+  if (eventData.creative_name) event.data.onsitead_variant = makeString(eventData.creative_name);
+  if (eventData.creative_slot) event.data.onsitead_category = makeString(eventData.creative_slot);
+  if (eventData.promotion_id) event.data.onsitead_campaign = makeString(eventData.promotion_id);
+  if (eventData.promotion_name) event.data.onsitead_creation = makeString(eventData.promotion_name);
   if (event.name.indexOf('publisher.') === 0 && !eventData.onsitead_type) {
     event.data.onsitead_type = 'Publisher';
-  } else if (
-    event.name.indexOf('self_promotion.') === 0 &&
-    !eventData.onsitead_type
-  ) {
+  } else if (event.name.indexOf('self_promotion.') === 0 && !eventData.onsitead_type) {
     event.data.onsitead_type = 'Self promotion';
   }
 
@@ -462,8 +453,7 @@ function addNonPAEcommerceData(eventData, mappedEventData) {
   }
 
   // items (GA4) to items_list (PA) mapping
-  const hasItems =
-    getType(eventData.items) === 'array' && eventData.items.length > 0;
+  const hasItems = getType(eventData.items) === 'array' && eventData.items.length > 0;
   if (hasItems) {
     // https://developers.atinternet-solutions.com/piano-analytics/data-collection/how-to-send-events/standard-events#batching-similar-events
     event.data.items_list = [];
@@ -476,23 +466,16 @@ function addNonPAEcommerceData(eventData, mappedEventData) {
 
       if (item.item_id) listItem.product_id = makeString(item.item_id);
       if (item.item_name) listItem.product = makeString(item.item_name);
-      if (item.item_variant)
-        listItem.product_variant = makeString(item.item_variant);
+      if (item.item_variant) listItem.product_variant = makeString(item.item_variant);
       if (item.coupon || item.discount) {
         const discount = item.coupon || item.discount;
-        listItem.product_discount =
-          getType(discount) !== 'boolean' ? true : discount;
+        listItem.product_discount = getType(discount) !== 'boolean' ? true : discount;
       }
-      if (item.item_brand)
-        listItem.product_brand = makeString(item.product_brand);
-      if (item.item_category)
-        listItem.product_category1 = makeString(item.item_category);
-      if (item.item_category2)
-        listItem.product_category2 = makeString(item.item_category2);
-      if (item.item_category3)
-        listItem.product_category3 = makeString(item.item_category3);
-      if (item.item_category4)
-        listItem.product_category4 = makeString(item.item_category4);
+      if (item.item_brand) listItem.product_brand = makeString(item.product_brand);
+      if (item.item_category) listItem.product_category1 = makeString(item.item_category);
+      if (item.item_category2) listItem.product_category2 = makeString(item.item_category2);
+      if (item.item_category3) listItem.product_category3 = makeString(item.item_category3);
+      if (item.item_category4) listItem.product_category4 = makeString(item.item_category4);
       if (item.quantity) {
         const quantity = makeInteger(item.quantity);
         listItem.product_quantity = quantity;
@@ -506,22 +489,14 @@ function addNonPAEcommerceData(eventData, mappedEventData) {
       }
 
       // self_promotion.* or publisher.* events
-      if (item.onsitead_type)
-        listItem.onsitead_type = makeString(item.onsitead_type);
-      if (item.creative_name)
-        listItem.onsitead_variant = makeString(item.creative_name);
-      if (item.creative_slot)
-        listItem.onsitead_category = makeString(item.creative_slot);
-      if (item.promotion_id)
-        listItem.onsitead_campaign = makeString(item.promotion_id);
-      if (item.promotion_name)
-        listItem.onsitead_creation = makeString(item.promotion_name);
+      if (item.onsitead_type) listItem.onsitead_type = makeString(item.onsitead_type);
+      if (item.creative_name) listItem.onsitead_variant = makeString(item.creative_name);
+      if (item.creative_slot) listItem.onsitead_category = makeString(item.creative_slot);
+      if (item.promotion_id) listItem.onsitead_campaign = makeString(item.promotion_id);
+      if (item.promotion_name) listItem.onsitead_creation = makeString(item.promotion_name);
       if (event.name.indexOf('publisher.') === 0 && !listItem.onsitead_type) {
         listItem.onsitead_type = 'Publisher';
-      } else if (
-        event.name.indexOf('self_promotion.') === 0 &&
-        !listItem.onsitead_type
-      ) {
+      } else if (event.name.indexOf('self_promotion.') === 0 && !listItem.onsitead_type) {
         listItem.onsitead_type = 'Self promotion';
       }
 
@@ -533,8 +508,7 @@ function addNonPAEcommerceData(eventData, mappedEventData) {
     }
 
     if (cartOrTransactionEvent) {
-      if (eventData.items.length)
-        event.data.cart_nbdistinctproduct = eventData.items.length;
+      if (eventData.items.length) event.data.cart_nbdistinctproduct = eventData.items.length;
       if (itemsTotalQuantity) event.data.cart_quantity = itemsTotalQuantity;
 
       const tax = eventData.tax;
@@ -555,8 +529,7 @@ function addChildEventDataIfNeeded(mappedEventData) {
 
   const childEventName = mapChildEventName(parentEvent.name);
   const hasItems =
-    getType(parentEvent.data.items_list) === 'array' &&
-    parentEvent.data.items_list.length > 0;
+    getType(parentEvent.data.items_list) === 'array' && parentEvent.data.items_list.length > 0;
 
   if (childEventName && hasItems) {
     const childEvent = {
@@ -590,11 +563,9 @@ function mapEventData(data, eventData) {
     event.data.browser_language_local = language[1];
   }
   if (eventData.page_hostname) event.data.hostname = eventData.page_hostname;
-  if (eventData.page_location)
-    event.data.event_url_full = eventData.page_location;
+  if (eventData.page_location) event.data.event_url_full = eventData.page_location;
   if (eventData.page_path) event.data.pathname = eventData.page_path;
-  if (eventData.page_referrer)
-    event.data.previous_url = eventData.page_referrer;
+  if (eventData.page_referrer) event.data.previous_url = eventData.page_referrer;
   if (eventData.page_title) event.data.page_title_html = eventData.page_title;
   if (eventData.screen_resolution) {
     const screenResolution = eventData.screen_resolution.split('x');
@@ -612,8 +583,7 @@ function mapEventData(data, eventData) {
   if (isValidValue(eventData.value)) event.data.value = eventData.value;
 
   // Event Data - Non-default parameters
-  if (eventData['x-ga-page_id'])
-    event.data.pageview_id = eventData['x-ga-page_id'];
+  if (eventData['x-ga-page_id']) event.data.pageview_id = eventData['x-ga-page_id'];
   if (eventData.search_term) event.data.ise_keyword = eventData.search_term;
 
   // Adds ecommerce data from incoming requests following the GA4 schema
@@ -681,9 +651,7 @@ function validateMappedEventData(mappedEventData) {
         TraceId: traceId,
         EventName: event.name,
         Message: 'Event was not sent.',
-        Reason:
-          'Mandatory parameter(s) missing: ' +
-          missingMandatoryProps.props.join(', ')
+        Reason: 'Mandatory parameter(s) missing: ' + missingMandatoryProps.props.join(', ')
       });
       return false;
     }
@@ -693,13 +661,10 @@ function validateMappedEventData(mappedEventData) {
 
 function getRequestUrl() {
   let requestUrl =
-    'https://' +
-    data.collectionDomain.replace('http://', '').replace('https://', '') +
-    '/event';
+    'https://' + data.collectionDomain.replace('http://', '').replace('https://', '') + '/event';
   requestUrl += '?s=' + (data.siteId || eventData['x-pa-site-id']);
   requestUrl +=
-    '&idclient=' +
-    enc(data.idClient || eventData.client_id || eventData['x-pa-idclient']);
+    '&idclient=' + enc(data.idClient || eventData.client_id || eventData['x-pa-idclient']);
 
   return requestUrl;
 }
@@ -795,10 +760,8 @@ function isUIFieldTrue(field) {
 
 function log(rawDataToLog) {
   const logDestinationsHandlers = {};
-  if (determinateIsLoggingEnabled())
-    logDestinationsHandlers.console = logConsole;
-  if (determinateIsLoggingEnabledForBigQuery())
-    logDestinationsHandlers.bigQuery = logToBigQuery;
+  if (determinateIsLoggingEnabled()) logDestinationsHandlers.console = logConsole;
+  if (determinateIsLoggingEnabledForBigQuery()) logDestinationsHandlers.bigQuery = logToBigQuery;
 
   // Key mappings for each log destination
   const keyMappings = {
@@ -859,9 +822,7 @@ function logToBigQuery(dataToLog) {
   // assertApi doesn't work for 'BigQuery.insert()'. It's needed to convert BigQuery into a function when testing.
   // Ref: https://gtm-gear.com/posts/gtm-templates-testing/
   const bigquery =
-    getType(BigQuery) === 'function'
-      ? BigQuery() /* Only during Unit Tests */
-      : BigQuery;
+    getType(BigQuery) === 'function' ? BigQuery() /* Only during Unit Tests */ : BigQuery;
   bigquery.insert(connectionInfo, [dataToLog], { ignoreUnknownValues: true });
 }
 
