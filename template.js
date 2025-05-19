@@ -127,9 +127,8 @@ function addNonPAEcommerceData(eventData, mappedEventData) {
     const tax = eventData.tax;
     const value = makeNumber(eventData.value);
     const valueIsValid = isValidValue(value);
-    if (valueIsValid && tax) {
-      event.data.cart_turnovertaxincluded = value + makeNumber(tax);
-    } else if (valueIsValid && !tax) {
+    if (valueIsValid) {
+      event.data.cart_turnovertaxincluded = tax ? value + makeNumber(tax) : value;
       event.data.cart_turnovertaxfree = value;
     }
   }
@@ -153,7 +152,7 @@ function addNonPAEcommerceData(eventData, mappedEventData) {
         const discount = item.coupon || item.discount;
         listItem.product_discount = getType(discount) !== 'boolean' ? true : discount;
       }
-      if (item.item_brand) listItem.product_brand = makeString(item.product_brand);
+      if (item.item_brand) listItem.product_brand = makeString(item.item_brand);
       if (item.item_category) listItem.product_category1 = makeString(item.item_category);
       if (item.item_category2) listItem.product_category2 = makeString(item.item_category2);
       if (item.item_category3) listItem.product_category3 = makeString(item.item_category3);
@@ -195,9 +194,10 @@ function addNonPAEcommerceData(eventData, mappedEventData) {
 
       const tax = eventData.tax;
       const valueIsValid = isValidValue(valueFromItems);
-      if (valueIsValid && tax) {
-        event.data.cart_turnovertaxincluded = valueFromItems + makeNumber(tax);
-      } else if (valueIsValid && !tax) {
+      if (valueIsValid) {
+        event.data.cart_turnovertaxincluded = tax
+          ? valueFromItems + makeNumber(tax)
+          : valueFromItems;
         event.data.cart_turnovertaxfree = valueFromItems;
       }
     }
@@ -244,9 +244,7 @@ function mapEventData(data, eventData) {
     event.data.browser_language = language[0];
     event.data.browser_language_local = language[1];
   }
-  if (eventData.page_hostname) event.data.hostname = eventData.page_hostname;
   if (eventData.page_location) event.data.event_url_full = eventData.page_location;
-  if (eventData.page_path) event.data.pathname = eventData.page_path;
   if (eventData.page_referrer) event.data.previous_url = eventData.page_referrer;
   if (eventData.page_title) event.data.page_title_html = eventData.page_title;
   if (eventData.screen_resolution) {
@@ -265,11 +263,11 @@ function mapEventData(data, eventData) {
   if (isValidValue(eventData.value)) event.data.value = eventData.value;
 
   // Event Data - Non-default parameters
-  if (eventData['x-ga-page_id']) event.data.pageview_id = eventData['x-ga-page_id'];
+  if (eventData['x-ga-page_id']) event.data.pageview_id = makeString(eventData['x-ga-page_id']);
   if (eventData.search_term) event.data.ise_keyword = eventData.search_term;
 
   // Adds ecommerce data from incoming requests following the GA4 schema
-  addNonPAEcommerceData(eventData, mappedEventData);
+  if (!eventData['x-pa-data']) addNonPAEcommerceData(eventData, mappedEventData);
 
   if (data.eventParametersExcludeList) {
     data.eventParametersExcludeList.forEach((p) => {
@@ -284,7 +282,7 @@ function mapEventData(data, eventData) {
   }
 
   // Only when using an incoming request that contains an event that produces a child event (e.g. GA4 schema)
-  addChildEventDataIfNeeded(mappedEventData);
+  if (!eventData['x-pa-data']) addChildEventDataIfNeeded(mappedEventData);
 
   return mappedEventData;
 }

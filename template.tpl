@@ -445,9 +445,8 @@ function addNonPAEcommerceData(eventData, mappedEventData) {
     const tax = eventData.tax;
     const value = makeNumber(eventData.value);
     const valueIsValid = isValidValue(value);
-    if (valueIsValid && tax) {
-      event.data.cart_turnovertaxincluded = value + makeNumber(tax);
-    } else if (valueIsValid && !tax) {
+    if (valueIsValid) {
+      event.data.cart_turnovertaxincluded = tax ? value + makeNumber(tax) : value;
       event.data.cart_turnovertaxfree = value;
     }
   }
@@ -471,7 +470,7 @@ function addNonPAEcommerceData(eventData, mappedEventData) {
         const discount = item.coupon || item.discount;
         listItem.product_discount = getType(discount) !== 'boolean' ? true : discount;
       }
-      if (item.item_brand) listItem.product_brand = makeString(item.product_brand);
+      if (item.item_brand) listItem.product_brand = makeString(item.item_brand);
       if (item.item_category) listItem.product_category1 = makeString(item.item_category);
       if (item.item_category2) listItem.product_category2 = makeString(item.item_category2);
       if (item.item_category3) listItem.product_category3 = makeString(item.item_category3);
@@ -513,9 +512,10 @@ function addNonPAEcommerceData(eventData, mappedEventData) {
 
       const tax = eventData.tax;
       const valueIsValid = isValidValue(valueFromItems);
-      if (valueIsValid && tax) {
-        event.data.cart_turnovertaxincluded = valueFromItems + makeNumber(tax);
-      } else if (valueIsValid && !tax) {
+      if (valueIsValid) {
+        event.data.cart_turnovertaxincluded = tax
+          ? valueFromItems + makeNumber(tax)
+          : valueFromItems;
         event.data.cart_turnovertaxfree = valueFromItems;
       }
     }
@@ -562,9 +562,7 @@ function mapEventData(data, eventData) {
     event.data.browser_language = language[0];
     event.data.browser_language_local = language[1];
   }
-  if (eventData.page_hostname) event.data.hostname = eventData.page_hostname;
   if (eventData.page_location) event.data.event_url_full = eventData.page_location;
-  if (eventData.page_path) event.data.pathname = eventData.page_path;
   if (eventData.page_referrer) event.data.previous_url = eventData.page_referrer;
   if (eventData.page_title) event.data.page_title_html = eventData.page_title;
   if (eventData.screen_resolution) {
@@ -583,11 +581,11 @@ function mapEventData(data, eventData) {
   if (isValidValue(eventData.value)) event.data.value = eventData.value;
 
   // Event Data - Non-default parameters
-  if (eventData['x-ga-page_id']) event.data.pageview_id = eventData['x-ga-page_id'];
+  if (eventData['x-ga-page_id']) event.data.pageview_id = makeString(eventData['x-ga-page_id']);
   if (eventData.search_term) event.data.ise_keyword = eventData.search_term;
 
   // Adds ecommerce data from incoming requests following the GA4 schema
-  addNonPAEcommerceData(eventData, mappedEventData);
+  if (!eventData['x-pa-data']) addNonPAEcommerceData(eventData, mappedEventData);
 
   if (data.eventParametersExcludeList) {
     data.eventParametersExcludeList.forEach((p) => {
@@ -602,7 +600,7 @@ function mapEventData(data, eventData) {
   }
 
   // Only when using an incoming request that contains an event that produces a child event (e.g. GA4 schema)
-  addChildEventDataIfNeeded(mappedEventData);
+  if (!eventData['x-pa-data']) addChildEventDataIfNeeded(mappedEventData);
 
   return mappedEventData;
 }
@@ -1136,12 +1134,13 @@ scenarios:
     \        browser_language_local: 'us',\n        event_url_full: 'https://developers.atinternet-solutions.com/piano-analytics/data-collection/general/how-it-works',\n\
     \        previous_url: 'https://example.com/',\n        page_title_html: 'Example\
     \ Domain',\n        device_screen_width: 1512,\n        device_screen_height:\
-    \ 982,\n        value: 72.05,\n        pageview_id: 1746024331702,\n        shipping_costtaxfree:\
-    \ 5.99,\n        transaction_promocode: ['SUMMER_SALE'],\n        transaction_id:\
-    \ 'T_12345',\n        cart_id: 'T_12345',\n        cart_turnovertaxincluded: 75.65,\n\
-    \        cart_nbdistinctproduct: 2,\n        cart_quantity: 5\n      }\n    }\n\
-    \  ]\n};\nmock('sendHttpRequest', (requestUrl, requestOptions, requestBody) =>\
-    \ {\n  const requestBodyParsed = JSON.parse(requestBody);\n  assertThat(requestBodyParsed).isEqualTo(expectedRequestBody);\
+    \ 982,\n        value: 72.05,\n        pageview_id: '1746024331702',\n       \
+    \ shipping_costtaxfree: 5.99,\n        transaction_promocode: ['SUMMER_SALE'],\n\
+    \        transaction_id: 'T_12345',\n        cart_id: 'T_12345',\n        cart_turnovertaxfree:\
+    \ 72.05000000000001,\n        cart_turnovertaxincluded: 75.65,\n        cart_nbdistinctproduct:\
+    \ 2,\n        cart_quantity: 5\n      }\n    }\n  ]\n};\nmock('sendHttpRequest',\
+    \ (requestUrl, requestOptions, requestBody) => {\n  const requestBodyParsed =\
+    \ JSON.parse(requestBody);\n  assertThat(requestBodyParsed).isEqualTo(expectedRequestBody);\
     \ // It should contain only one event. The one which has all required properties\n\
     \  \n  return {\n    then: (callback) => { \n      callback({ statusCode: 200\
     \ });\n      return {\n        then: () => {},\n        catch: () => {}\n    \
@@ -1217,12 +1216,10 @@ scenarios:
     \        ch_ua_mobile: false,\n        ch_ua_model: '',\n        ch_ua_platform:\
     \ 'macOS',\n        ch_ua_platform_version: '15.2.0',\n        ch_ua_full_version:\
     \ '135.0.7049.115',\n        user_id: 'userid123',\n        user_category: 'testcategory',\n\
-    \        user_recognition: false,\n        hostname: 'developers.atinternet-solutions.com',\n\
-    \        pathname: '/piano-analytics/data-collection/general/how-it-works',\n\
-    \        value: 1120.9\n      }\n    }\n  ]\n};\n\nmock('sendHttpRequest', (requestUrl,\
-    \ requestOptions, requestBody) => {\n  assertThat(requestUrl).isEqualTo(expectedRequestUrl);\n\
-    \  assertThat(requestOptions).isEqualTo(expectedRequestOptions);\n  const requestBodyParsed\
-    \ = JSON.parse(requestBody);\n  assertThat(requestBodyParsed).isEqualTo(expectedRequestBody);\n\
+    \        user_recognition: false,\n        value: 1120.9\n      }\n    }\n  ]\n\
+    };\n\nmock('sendHttpRequest', (requestUrl, requestOptions, requestBody) => {\n\
+    \  assertThat(requestUrl).isEqualTo(expectedRequestUrl);\n  assertThat(requestOptions).isEqualTo(expectedRequestOptions);\n\
+    \  const requestBodyParsed = JSON.parse(requestBody);\n  assertThat(requestBodyParsed).isEqualTo(expectedRequestBody);\n\
     \  \n  return {\n    then: (callback) => { \n      callback({ statusCode: 200\
     \ });\n      return {\n        then: () => {},\n        catch: () => {}\n    \
     \  };\n    },\n    catch: (callback) => callback()\n  };\n});\n\nrunCode(mockData);\n\
@@ -1240,36 +1237,37 @@ scenarios:
     \        browser_language_local: 'us',\n        event_url_full:\n          'https://developers.atinternet-solutions.com/piano-analytics/data-collection/general/how-it-works',\n\
     \        previous_url: 'https://example.com/',\n        page_title_html: 'Example\
     \ Domain',\n        device_screen_width: 1512,\n        device_screen_height:\
-    \ 982,\n        value: 72.05,\n        pageview_id: 1746024331702,\n        shipping_costtaxfree:\
-    \ 5.99,\n        transaction_promocode: ['SUMMER_SALE'],\n        transaction_id:\
-    \ 'T_12345',\n        cart_id: 'T_12345',\n        cart_turnovertaxincluded: 75.65,\n\
-    \        cart_nbdistinctproduct: 2,\n        cart_quantity: 5\n      }\n    },\n\
-    \    {\n      name: 'product.purchased',\n      data: {\n        device_timestamp_utc:\
-    \ 1746111402,\n        cart_currency: 'USD',\n        browser_language: 'en',\n\
-    \        browser_language_local: 'us',\n        event_url_full:\n          'https://developers.atinternet-solutions.com/piano-analytics/data-collection/general/how-it-works',\n\
+    \ 982,\n        value: 72.05,\n        pageview_id: '1746024331702',\n       \
+    \ shipping_costtaxfree: 5.99,\n        transaction_promocode: ['SUMMER_SALE'],\n\
+    \        transaction_id: 'T_12345',\n        cart_id: 'T_12345',\n        cart_turnovertaxfree:\
+    \ 72.05000000000001,\n        cart_turnovertaxincluded: 75.65,\n        cart_nbdistinctproduct:\
+    \ 2,\n        cart_quantity: 5\n      }\n    },\n    {\n      name: 'product.purchased',\n\
+    \      data: {\n        device_timestamp_utc: 1746111402,\n        cart_currency:\
+    \ 'USD',\n        browser_language: 'en',\n        browser_language_local: 'us',\n\
+    \        event_url_full:\n          'https://developers.atinternet-solutions.com/piano-analytics/data-collection/general/how-it-works',\n\
     \        previous_url: 'https://example.com/',\n        page_title_html: 'Example\
     \ Domain',\n        device_screen_width: 1512,\n        device_screen_height:\
-    \ 982,\n        value: 72.05,\n        pageview_id: 1746024331702,\n        shipping_costtaxfree:\
-    \ 5.99,\n        transaction_promocode: ['SUMMER_SALE'],\n        transaction_id:\
-    \ 'T_12345',\n        cart_id: 'T_12345',\n        cart_turnovertaxincluded: 75.65,\n\
-    \        items_list: [\n          {\n            product_id: 'SKU_12345',\n  \
-    \          product: 'Stan and Friends Tee',\n            product_variant: 'green',\n\
-    \            product_discount: true,\n            product_brand: 'undefined',\n\
-    \            product_category1: 'Apparel',\n            product_category2: 'Adult',\n\
-    \            product_category3: 'Shirts',\n            product_category4: 'Crew',\n\
-    \            product_quantity: 3,\n            product_pricetaxfree: 10.01\n \
-    \         },\n          {\n            product_id: 'SKU_12346',\n            product:\
-    \ \"Google Grey Women's Tee\",\n            product_variant: 'gray',\n       \
-    \     product_discount: true,\n            product_brand: 'undefined',\n     \
-    \       product_category1: 'Apparel',\n            product_category2: 'Adult',\n\
-    \            product_category3: 'Shirts',\n            product_category4: 'Crew',\n\
-    \            product_quantity: 2,\n            product_pricetaxfree: 21.01,\n\
-    \            onsitead_campaign: 'P_12345',\n            onsitead_creation: 'Summer\
-    \ Sale'\n          }\n        ],\n        cart_nbdistinctproduct: 2,\n       \
-    \ cart_quantity: 5\n      }\n    }\n  ]\n};\n\nmock('sendHttpRequest', (requestUrl,\
-    \ requestOptions, requestBody) => {\n  assertThat(requestUrl).isEqualTo(expectedRequestUrl);\n\
-    \  assertThat(requestOptions).isEqualTo(expectedRequestOptions);\n  const requestBodyParsed\
-    \ = JSON.parse(requestBody);\n  assertThat(requestBodyParsed).isEqualTo(expectedRequestBody);\n\
+    \ 982,\n        value: 72.05,\n        pageview_id: '1746024331702',\n       \
+    \ shipping_costtaxfree: 5.99,\n        transaction_promocode: ['SUMMER_SALE'],\n\
+    \        transaction_id: 'T_12345',\n        cart_id: 'T_12345',\n        cart_turnovertaxfree:\
+    \ 72.05000000000001,\n        cart_turnovertaxincluded: 75.65,\n        items_list:\
+    \ [\n          {\n            product_id: 'SKU_12345',\n            product: 'Stan\
+    \ and Friends Tee',\n            product_variant: 'green',\n            product_discount:\
+    \ true,\n            product_brand: 'Google',\n            product_category1:\
+    \ 'Apparel',\n            product_category2: 'Adult',\n            product_category3:\
+    \ 'Shirts',\n            product_category4: 'Crew',\n            product_quantity:\
+    \ 3,\n            product_pricetaxfree: 10.01\n          },\n          {\n   \
+    \         product_id: 'SKU_12346',\n            product: \"Google Grey Women's\
+    \ Tee\",\n            product_variant: 'gray',\n            product_discount:\
+    \ true,\n            product_brand: 'Google',\n            product_category1:\
+    \ 'Apparel',\n            product_category2: 'Adult',\n            product_category3:\
+    \ 'Shirts',\n            product_category4: 'Crew',\n            product_quantity:\
+    \ 2,\n            product_pricetaxfree: 21.01,\n            onsitead_campaign:\
+    \ 'P_12345',\n            onsitead_creation: 'Summer Sale'\n          }\n    \
+    \    ],\n        cart_nbdistinctproduct: 2,\n        cart_quantity: 5\n      }\n\
+    \    }\n  ]\n};\n\nmock('sendHttpRequest', (requestUrl, requestOptions, requestBody)\
+    \ => {\n  assertThat(requestUrl).isEqualTo(expectedRequestUrl);\n  assertThat(requestOptions).isEqualTo(expectedRequestOptions);\n\
+    \  const requestBodyParsed = JSON.parse(requestBody);\n  assertThat(requestBodyParsed).isEqualTo(expectedRequestBody);\n\
     \  \n  return {\n    then: (callback) => { \n      callback({ statusCode: 200\
     \ });\n      return {\n        then: () => {},\n        catch: () => {}\n    \
     \  };\n    },\n    catch: (callback) => callback()\n  };\n});\n\nrunCode(mockData);\n\
@@ -1319,12 +1317,10 @@ scenarios:
     \        ch_ua_mobile: false,\n        ch_ua_model: '',\n        ch_ua_platform:\
     \ 'macOS',\n        ch_ua_platform_version: '15.2.0',\n        ch_ua_full_version:\
     \ '135.0.7049.115',\n        user_id: 'userid123',\n        user_category: 'testcategory',\n\
-    \        user_recognition: false,\n        hostname: 'developers.atinternet-solutions.com',\n\
-    \        pathname: '/piano-analytics/data-collection/general/how-it-works',\n\
-    \        value: 1120.9\n      }\n    }\n  ]\n};\n\nmock('sendHttpRequest', (requestUrl,\
-    \ requestOptions, requestBody) => {\n  assertThat(requestUrl).isEqualTo(expectedRequestUrl);\n\
-    \  assertThat(requestOptions).isEqualTo(expectedRequestOptions);\n  const requestBodyParsed\
-    \ = JSON.parse(requestBody);\n  assertThat(requestBodyParsed).isEqualTo(expectedRequestBody);\n\
+    \        user_recognition: false,\n        value: 1120.9\n      }\n    }\n  ]\n\
+    };\n\nmock('sendHttpRequest', (requestUrl, requestOptions, requestBody) => {\n\
+    \  assertThat(requestUrl).isEqualTo(expectedRequestUrl);\n  assertThat(requestOptions).isEqualTo(expectedRequestOptions);\n\
+    \  const requestBodyParsed = JSON.parse(requestBody);\n  assertThat(requestBodyParsed).isEqualTo(expectedRequestBody);\n\
     \  \n  return {\n    then: (callback) => { \n      callback({ statusCode: 200\
     \ });\n      return {\n        then: () => {},\n        catch: () => {}\n    \
     \  };\n    },\n    catch: (callback) => callback()\n  };\n});\n\nrunCode(mockData);\n\
@@ -1343,18 +1339,18 @@ scenarios:
     \        browser_language_local: 'us',\n        event_url_full:\n          'https://developers.atinternet-solutions.com/piano-analytics/data-collection/general/how-it-works',\n\
     \        previous_url: 'https://example.com/',\n        page_title_html: 'Example\
     \ Domain',\n        device_screen_width: 1512,\n        device_screen_height:\
-    \ 982,\n        value: 72.05,\n        pageview_id: 1746024331702,\n        shipping_costtaxfree:\
-    \ 5.99,\n        transaction_promocode: ['SUMMER_SALE'],\n        transaction_id:\
-    \ 'T_12345',\n        cart_id: 'T_12345',\n        items_list: [\n          {\n\
-    \            product_id: 'SKU_12345',\n            product: 'Stan and Friends\
-    \ Tee',\n            product_variant: 'green',\n            product_discount:\
-    \ true,\n            product_brand: 'undefined',\n            product_category1:\
+    \ 982,\n        value: 72.05,\n        pageview_id: '1746024331702',\n       \
+    \ shipping_costtaxfree: 5.99,\n        transaction_promocode: ['SUMMER_SALE'],\n\
+    \        transaction_id: 'T_12345',\n        cart_id: 'T_12345',\n        items_list:\
+    \ [\n          {\n            product_id: 'SKU_12345',\n            product: 'Stan\
+    \ and Friends Tee',\n            product_variant: 'green',\n            product_discount:\
+    \ true,\n            product_brand: 'Google',\n            product_category1:\
     \ 'Apparel',\n            product_category2: 'Adult',\n            product_category3:\
     \ 'Shirts',\n            product_category4: 'Crew',\n            product_quantity:\
     \ 3,\n            product_pricetaxfree: 10.01\n          },\n          {\n   \
     \         product_id: 'SKU_12346',\n            product: \"Google Grey Women's\
     \ Tee\",\n            product_variant: 'gray',\n            product_discount:\
-    \ true,\n            product_brand: 'undefined',\n            product_category1:\
+    \ true,\n            product_brand: 'Google',\n            product_category1:\
     \ 'Apparel',\n            product_category2: 'Adult',\n            product_category3:\
     \ 'Shirts',\n            product_category4: 'Crew',\n            product_quantity:\
     \ 2,\n            product_pricetaxfree: 21.01,\n            onsitead_campaign:\
