@@ -1,5 +1,7 @@
 homepage: 'https://stape.io/'
 versions:
+  - sha: b0b6e01b2144c10ecf83c844961ee1103ff31870
+    changeNotes: Format tag categories metadata.
   - sha: 273790dbf864586b3ee6927ae43d88b4e72a09cd
     changeNotes: Fixed mispelled names. Improved logic.
   - sha: f55a33a929d49a149876c0412f5f194122f1bcd7
