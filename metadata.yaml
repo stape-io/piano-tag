@@ -1,6 +1,6 @@
 homepage: 'https://stape.io/'
 versions:
   - sha: 273790dbf864586b3ee6927ae43d88b4e72a09cd
-    changeNotes: Small chores: mispelled names, improving logic etc.
+    changeNotes: Fixed mispelled names. Improved logic.
   - sha: f55a33a929d49a149876c0412f5f194122f1bcd7
     changeNotes: Initial release.
