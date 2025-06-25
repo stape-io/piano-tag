@@ -1,5 +1,8 @@
 homepage: 'https://stape.io/'
+documentation: 'https://github.com/stape-io/piano-tag'
 versions:
+  - sha: 1ad7128ffd337af6887a00917fca3f63b79f828d
+    changeNotes: Remove some code comments.
   - sha: b0b6e01b2144c10ecf83c844961ee1103ff31870
     changeNotes: Format tag categories metadata.
   - sha: 273790dbf864586b3ee6927ae43d88b4e72a09cd
