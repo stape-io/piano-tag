@@ -12,15 +12,19 @@ const makeNumber = require('makeNumber');
 const makeString = require('makeString');
 const sendHttpRequest = require('sendHttpRequest');
 
-/**********************************************************************************************/
+/*==============================================================================
+==============================================================================*/
 
 const traceId = getRequestHeader('trace-id');
-
 const eventData = getAllEventData();
-
 const useOptimisticScenario = isUIFieldTrue(data.useOptimisticScenario);
 
 const url = eventData.page_location || getRequestHeader('referer');
+
+if (!isConsentGivenOrNotRequired(data, eventData)) {
+  return data.gtmOnSuccess();
+}
+
 if (url && url.lastIndexOf('https://gtm-msr.appspot.com/', 0) === 0) {
   return data.gtmOnSuccess();
 }
@@ -38,8 +42,9 @@ if (useOptimisticScenario) {
   return data.gtmOnSuccess();
 }
 
-/**********************************************************************************************/
-// Vendor related functions
+/*==============================================================================
+Vendor related functions
+==============================================================================*/
 
 function mapEventName(data, eventData) {
   if (data.eventType === 'inherit') {
@@ -415,11 +420,20 @@ function sendRequest(mappedEventData) {
     });
 }
 
-/**********************************************************************************************/
-// Helpers
+/*==============================================================================
+Helpers
+==============================================================================*/
 
 function enc(data) {
-  return encodeUriComponent(makeString(data || ''));
+  if (['null', 'undefined'].indexOf(getType(data)) !== -1) data = '';
+  return encodeUriComponent(makeString(data));
+}
+
+function isConsentGivenOrNotRequired(data, eventData) {
+  if (data.adStorageConsent !== 'required') return true;
+  if (eventData.consent_state) return !!eventData.consent_state.analytics_storage;
+  const xGaGcs = eventData['x-ga-gcs'] || ''; // x-ga-gcs is a string like "G110"
+  return xGaGcs[3] === '1'; // The fourth character indicates analytics_storage consent
 }
 
 function mergeObj(target, source) {
