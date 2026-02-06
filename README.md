@@ -24,25 +24,25 @@ The recommended incoming request format to be used in conjunction with this tag 
 However, it also supports the GA4 schema.
 When using the **inherit** method with a GA4 event schema, the following mappings will be applied:
 
-| GA4 Event                | Piano Analytics Equivalent     |
-|--------------------------|--------------------------------|
-| `page_view`              | `page.display`                |
-| `search`, `view_search_results` | `internal_search_result.display` |
-| `view_item_list`         | `product.display`             |
-| `view_item`              | `product.page_display`        |
-| `add_to_cart`            | `product.add_to_cart`         |
-| `remove_from_cart`       | `product.remove_from_cart`    |
-| `view_cart`              | `cart.display`  and `product.display`                |
-| `add_shipping_info`      | `cart.delivery`               |
-| `add_payment_info`       | `cart.payment`                |
-| `purchase`               | `transaction.confirmation` and `product.purchased`    |
-| `view_promotion`         | `self_promotion.impression`   |
-| `select_promotion`       | `self_promotion.click`        |
+| GA4 Event                       | Piano Analytics Equivalent                         |
+| ------------------------------- | -------------------------------------------------- |
+| `page_view`                     | `page.display`                                     |
+| `search`, `view_search_results` | `internal_search_result.display`                   |
+| `view_item_list`                | `product.display`                                  |
+| `view_item`                     | `product.page_display`                             |
+| `add_to_cart`                   | `product.add_to_cart`                              |
+| `remove_from_cart`              | `product.remove_from_cart`                         |
+| `view_cart`                     | `cart.display` and `product.display`               |
+| `add_shipping_info`             | `cart.delivery`                                    |
+| `add_payment_info`              | `cart.payment`                                     |
+| `purchase`                      | `transaction.confirmation` and `product.purchased` |
+| `view_promotion`                | `self_promotion.impression`                        |
+| `select_promotion`              | `self_promotion.click`                             |
 
 ## Required Fields
 
-- **Collection Domain** – Found in Piano's dashboard under *Tagging → Collection Domains*.
-- **Site ID** – Found in Piano's dashboard under the *ID* column of the desired site. If not set, it will inherit from the Event Data parameter `x-pa-site-id` generated the by [Piano Analytics Client by Stape](https://github.com/stape-io/piano-client).
+- **Collection Domain** – Found in Piano's dashboard under _Tagging → Collection Domains_.
+- **Site ID** – Found in Piano's dashboard under the _ID_ column of the desired site. If not set, it will inherit from the Event Data parameter `x-pa-site-id` generated the by [Piano Analytics Client by Stape](https://github.com/stape-io/piano-client).
 - **Visitor ID** – Must be a 16-character string or a UUID. If not set, it will inherit from the Event Data parameters `client_id` or `x-pa-idclient` generated the by [Piano Analytics Client by Stape](https://github.com/stape-io/piano-client).
 - **Event Name** – Either inherited or custom.
 
@@ -70,6 +70,7 @@ When using the **inherit** method with a GA4 event schema, the following mapping
 - [Piano Analytics Collection API Reference](https://developers.atinternet-solutions.com/piano-analytics/data-collection/how-to-send-events/collection-api)
 - [Piano Analytics Standard Events Reference](https://developers.atinternet-solutions.com/piano-analytics/data-collection/how-to-send-events/standard-events/)
 - [Piano Analytics Ecommerce Events Reference](https://developers.atinternet-solutions.com/piano-analytics/data-collection/how-to-send-events/sales-insights/)
+- [Step-by-step guide on how to configure Piano server-side tracking](https://stape.io/blog/piano-analytics-server-side-tracking-guide)
 
 ## Open Source
 
