@@ -1,6 +1,8 @@
 homepage: 'https://stape.io/'
 documentation: 'https://github.com/stape-io/piano-tag'
 versions:
+  - sha: 48060defdc5159b30c5cbedd33f7544ef761a783
+    changeNotes: Added consent section.
   - sha: 1ad7128ffd337af6887a00917fca3f63b79f828d
     changeNotes: Remove some code comments.
   - sha: b0b6e01b2144c10ecf83c844961ee1103ff31870
