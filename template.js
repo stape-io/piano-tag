@@ -1,7 +1,5 @@
-const BigQuery = require('BigQuery');
 const encodeUriComponent = require('encodeUriComponent');
 const getAllEventData = require('getAllEventData');
-const getContainerVersion = require('getContainerVersion');
 const getRequestHeader = require('getRequestHeader');
 const getTimestampMillis = require('getTimestampMillis');
 const getType = require('getType');
@@ -15,7 +13,6 @@ const sendHttpRequest = require('sendHttpRequest');
 /*==============================================================================
 ==============================================================================*/
 
-const traceId = getRequestHeader('trace-id');
 const eventData = getAllEventData();
 const useOptimisticScenario = isUIFieldTrue(data.useOptimisticScenario);
 
@@ -333,9 +330,8 @@ function validateMappedEventData(mappedEventData) {
       log({
         Name: 'PianoAnalyticsTag',
         Type: 'Message',
-        TraceId: traceId,
         EventName: event.name,
-        Message: 'Event was not sent.',
+        Message: '🛑 [ERROR] Event was not sent.',
         Reason: 'Mandatory parameter(s) missing: ' + missingMandatoryProps.props.join(', ')
       });
       return false;
@@ -374,18 +370,6 @@ function sendRequest(mappedEventData) {
     events: mappedEventData
   };
 
-  const eventNames = mappedEventData.map((e) => e.name).join('|');
-  log({
-    Name: 'PianoAnalyticsTag',
-    Type: 'Request',
-    TraceId: traceId,
-    EventName: eventNames,
-    RequestMethod: 'POST',
-    RequestUrl: requestUrl,
-    RequestHeaders: requestHeaders,
-    RequestBody: requestBody
-  });
-
   sendHttpRequest(
     requestUrl,
     {
@@ -395,16 +379,6 @@ function sendRequest(mappedEventData) {
     JSON.stringify(requestBody)
   )
     .then((response) => {
-      log({
-        Name: 'PianoAnalyticsTag',
-        Type: 'Response',
-        TraceId: traceId,
-        EventName: eventNames,
-        ResponseStatusCode: response.statusCode,
-        ResponseHeaders: response.headers,
-        ResponseBody: response.body
-      });
-
       if (!useOptimisticScenario) {
         if (response.statusCode >= 200 && response.statusCode < 300) {
           data.gtmOnSuccess();
@@ -445,7 +419,7 @@ function mergeObj(target, source) {
 
 function isValidValue(value) {
   const valueType = getType(value);
-  return valueType !== 'null' && valueType !== 'undefined' && value !== '';
+  return valueType !== 'null' && valueType !== 'undefined' && value !== '' && value === value;
 }
 
 function isUIFieldTrue(field) {
@@ -453,89 +427,6 @@ function isUIFieldTrue(field) {
 }
 
 function log(rawDataToLog) {
-  const logDestinationsHandlers = {};
-  if (determinateIsLoggingEnabled()) logDestinationsHandlers.console = logConsole;
-  if (determinateIsLoggingEnabledForBigQuery()) logDestinationsHandlers.bigQuery = logToBigQuery;
-
-  const keyMappings = {
-    // No transformation for Console is needed.
-    bigQuery: {
-      Name: 'tag_name',
-      Type: 'type',
-      TraceId: 'trace_id',
-      EventName: 'event_name',
-      RequestMethod: 'request_method',
-      RequestUrl: 'request_url',
-      RequestBody: 'request_body',
-      ResponseStatusCode: 'response_status_code',
-      ResponseHeaders: 'response_headers',
-      ResponseBody: 'response_body'
-    }
-  };
-
-  for (const logDestination in logDestinationsHandlers) {
-    const handler = logDestinationsHandlers[logDestination];
-    if (!handler) continue;
-
-    const mapping = keyMappings[logDestination];
-    const dataToLog = mapping ? {} : rawDataToLog;
-
-    if (mapping) {
-      for (const key in rawDataToLog) {
-        const mappedKey = mapping[key] || key;
-        dataToLog[mappedKey] = rawDataToLog[key];
-      }
-    }
-
-    handler(dataToLog);
-  }
-}
-
-function logConsole(dataToLog) {
-  logToConsole(JSON.stringify(dataToLog));
-}
-
-function logToBigQuery(dataToLog) {
-  const connectionInfo = {
-    projectId: data.logBigQueryProjectId,
-    datasetId: data.logBigQueryDatasetId,
-    tableId: data.logBigQueryTableId
-  };
-
-  dataToLog.timestamp = getTimestampMillis();
-
-  ['request_body', 'response_headers', 'response_body'].forEach((p) => {
-    dataToLog[p] = JSON.stringify(dataToLog[p]);
-  });
-
-  const bigquery =
-    getType(BigQuery) === 'function' ? BigQuery() /* Only during Unit Tests */ : BigQuery;
-  bigquery.insert(connectionInfo, [dataToLog], { ignoreUnknownValues: true });
-}
-
-function determinateIsLoggingEnabled() {
-  const containerVersion = getContainerVersion();
-  const isDebug = !!(
-    containerVersion &&
-    (containerVersion.debugMode || containerVersion.previewMode)
-  );
-
-  if (!data.logType) {
-    return isDebug;
-  }
-
-  if (data.logType === 'no') {
-    return false;
-  }
-
-  if (data.logType === 'debug') {
-    return isDebug;
-  }
-
-  return data.logType === 'always';
-}
-
-function determinateIsLoggingEnabledForBigQuery() {
-  if (data.bigQueryLogType === 'no') return false;
-  return data.bigQueryLogType === 'always';
+  rawDataToLog.TraceId = getRequestHeader('trace-id');
+  logToConsole(JSON.stringify(rawDataToLog));
 }

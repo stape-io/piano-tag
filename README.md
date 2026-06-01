@@ -15,7 +15,6 @@ It's designed to integrate seamlessly with the [Piano Analytics Client by Stape]
    - **Custom** – define your own event name manually.
 6. (Optional) Configure options like **Redact Visitor IP** and **Use Optimistic Scenario**.
 7. Add or modify event parameters, and specify any to exclude.
-8. (Optional) Enable logging to **Console** and/or **BigQuery**.
 
 ## Supported Event Name Mapping
 
@@ -51,11 +50,6 @@ When using the **inherit** method with a GA4 event schema, the following mapping
 - You can add, overwrite, or exclude event parameters.
 - For ecommerce events, **`cart_id`** is essential.
   - If not set explicitly, the tag will fallback to `transaction_id`, though this is not recommended.
-
-## Logging Options
-
-- **Console Logging**: Log all events to the browser console during preview/debug or always.
-- **BigQuery Logging**: Log event payloads, request details, and responses to a specified BigQuery table.
 
 ## Benefits of Using Server-Side Tracking with Piano Analytics
 
